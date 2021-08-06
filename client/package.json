@@ -10,9 +10,10 @@
     "react-scripts": "4.0.3"
   },
   "scripts": {
-    "start": "concurrently \"npm:build-sass\" \"npm:start-react\"",
-    "build-sass": "sass --watch src/styling:public/stylesheets",
-    "start-react": "PORT=3001 react-scripts start",
+    "start-react": "npm run sass",
+    "sass": "concurrently \"npm:build-sass\" \"npm:start-react\"",
+    "build-sass": "sass --watch src/styling src/styling/ src/css/",
+    "start": "PORT=3003 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -38,6 +39,9 @@
   "devDependencies": {
     "@babel/core": "^7.14.3",
     "@babel/preset-react": "^7.13.13",
-    "concurrently": "^6.2.0"
+    "@types/react": "^17.0.13",
+    "concurrently": "^6.2.0",
+    "eslint": "^7.30.0",
+    "eslint-plugin-react": "^7.24.0"
   }
 }

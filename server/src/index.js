@@ -4,6 +4,9 @@ import axios from 'axios'
 import cron from 'node-cron'
 import fs from 'fs'
 import dotenv from 'dotenv'
+import userSystem from 'os'
+import cf from './util/customFile.js'
+
 dotenv.config()
 
 const app = express()
@@ -12,96 +15,69 @@ app.use(express.urlencoded({extended: true}))
 app.use(express.json())
 app.use(cors())
 
-const PORT = process.env.PORT || 4002
-app.listen(PORT, () =>
-    console.log(`Server running on http://localhost:${PORT}`)
-)
-  
+let PORT = process.env.PORT || 4002
+
+const server = app.listen(PORT, () => {
+    let system = {info: userSystem.userInfo(), uptime: userSystem.uptime(), host: userSystem.hostname()}
+    console.log(`Server successfully running on http://localhost:${PORT}`);
+    console.log(`Server details: `)
+    console.log(system)
+    }
+) 
+
+server.on('error', async err => {
+    if(err.EADDRINUSE) {
+        console.log('port already in use')
+        server.close(() => console.log(`server closed`))
+    }
+})
+
+app.get('/api/default', async (req,res) => {
+    const ip = req.headers['x-forwarded-for'] ||
+        req.socket.remoteAddress ||
+        null;
+    if(ip === '::1') {
+        res.send(ip)
+        return
+    }
+    cf.writeToFile('history', ip)
+    res.send(ip)
+})
+
 app.get('/api/details', async (req,res) => {
-    let x = await doesFileExist()
+    let x = await cf.doesFileExist(cf.file.github)
     if(!x) {
         console.log('data file created')
-        await writeData()
+        await cf.writeData('github')
     }
 
-    let buffer = fs.readFileSync('../data.json')
+    let buffer = fs.readFileSync(cf.file.github)
     let response = JSON.parse(buffer)
     res.json(response)
 })
 
-// app.get('/api/spotify', async (req,res) => {
-//     let n = await getCurrentPlaying()
-//     .then(response => {
-//         axios.post('https://accounts.spotify.com/api/token', {
-//             "grant_type": "authorization_code",
-//             "code": "",
-//         })
-//         console.log(process.env.CLIENT_ID)
-//         res.send({response})
-//     })
-// })
-
-cron.schedule('*/1 * * * *', () => {
-    try{
-        writeData()
-        console.log(`new data grabbed`)
-    } catch (e) {
-        console.log(e.message)
-    }
+app.get('/api/spotify', async (req,res) => {
+    let token = await axios.post('https://accounts.spotify.com/api/token', {
+            headers: {"Authorization": `Basic ${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`},
+            data: {"grant_type": "client_credentials"}
+        })
+        console.log(token)
+    await getCurrentPlaying("BQBUCtVxxgThDpjO6Mnu2OkY5cLo-lc0mLDB7dkw74jZ_Eo6RZjKkk5rIRS4W9ohaFL-IoPKdUb1ZL8VBSI")
+    .then(response => {
+        console.log(response)
+        res.send(response)
+    })
 })
 
-const writeData = async () => {
-    let data = await githubData()
-    fs.writeFile('../data.json', JSON.stringify(data), (err) => {
-        if(err) return new Error('unable to write new data')
-    })
-}
-
-const doesFileExist = async () => {
-    return fs.existsSync('../data.json')
-}
-
-const githubData = async () => {
-    let x = await axios.get('https://api.github.com/users/evoked/repos', {
-        headers: {
-        'User-Agent': 'evoked-portolio',
-        "Accept":"application/vnd.github.mercy-preview+json"
-    }}).catch(rej => {
-        throw new Error('unable to connect to github')
-    })
-
-    let data = []
-
-    x.data.forEach(element => {
-        let project = {
-            userDetails: {
-                username: element.owner.login, 
-                usernameUrl: element.owner.html_url,
-            },
-            name: element.name,
-            url: element.html_url,
-            description: element.description,
-            topics: element.topics,
-            images: element.homepage,
-            updatedAt: element.updated_at
-        }
-
-        if(!project.images) {
-            data.push(project); 
-            return;
-        }
-
-        const images = project.images.split(' ')
-        project = {
-            ...project, 
-            images: images
-        }
-        data.push(project)
-    });
-
-    data.push({timeUpdated: new Date()})
-    return data
-}
+cron.schedule('*/1 * * * *', async () => {
+    try{
+        let data = await githubData()
+        writeData('github', data)
+        console.log(`new data grabbed`)
+    } catch (e) {
+        console.log(e)
+    }
+})
 
 const refreshToken = async () => {
     console.log(process.env.CLIENT_ID)
@@ -109,22 +85,23 @@ const refreshToken = async () => {
     return ids
 }
 
-const getCurrentPlaying = async () => {
+const getCurrentPlaying = async (token) => {
     let n  = {}
     await axios({
         method: 'GET',
         url: 'https://api.spotify.com/v1/me/player/currently-playing',
         headers: {
-            "Authorization": "Bearer BQBSF1WTIdpHhRuerUn67eMtCR5NIio8pOFWqmyzbmuDiO9_05iqj2RQFhBywAe1LC_XkO0dCSbXbXehWx-SB0As4pw13bZXqzSsa7V0HHskJKBK-rOFtDJuxCHi6f5APzh2KAsfspwj44pJT5I6AQ",
+            "Authorization": `Bearer ${token}`,
             "Accept": "application/json",
             "Content-Type": "application/json"
     }})
     .then((res) => {
         if(!res.data) return 'not playing'
+        console.log(res.data)
         n = res.data
     }).catch(e => {
         throw new Error('unable to connect to spotify API')
     })
-    console.log(n)
+    console.log(n, "hahaha")
     return n
 }

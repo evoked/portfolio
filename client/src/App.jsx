@@ -1,4 +1,3 @@
-import {Header} from './components/Header.js'
 import {Main0} from './components/Main0.js'
 // import  from 'components/Main1.js'
 import {Footer} from './components/Footer.js'
@@ -8,11 +7,11 @@ import axios from 'axios'
 function App() {
   const [data, setData] = useState({})
   useEffect(() => {
-      axios.get('http://localhost:3002/api/details')
+      axios.get('http://localhost:3005/api/details')
       .then(res => setData(res))
       .catch(rej => console.log(rej))
   }, [])
-  return (
+  return ( 
     <div className="App">
       {/* <Header /> */}
       <Main0 props={data}/>

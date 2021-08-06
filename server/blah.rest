@@ -1,0 +1,14 @@
+curl -X "POST" -H "Authorization: Basic 7fe8fdf4a36a41d9b791de832205c52e:e20f8b7c92844008a387e06ce763d09e" -d grant_type=client_credentials https://accounts.spotify.com/api/token
+
+curl -X "GET" "https://api.spotify.com/v1/me/player/currently-playing" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer BQCCcY6loMJiTrFcJVLfLMFT4V-brIUptQMGXjUb8ao2ycbP4FYU-4DH70PL8Wbw7ilaFHVTWnlfv3V5-u4"
+
+
+# Accessing your data without showing a login form
+I want to interact with the web API and show some data on my website. I see that the endpoints I require authorization, but I don’t need/want a login window to pop-up, because I want to grant my own app access to my own playlists once. Is there any way of doing this?
+You basically need an access token and a refresh token issued for your user account. To obtain a pair of access token - refresh token, follow the Authorization Code Flow (if you need a certain scope to be approved) or Client Credentials (if you just need to sign your request, like when fetching a certain playlist). Once you obtain them, you can use your access token and refresh it when it expires without having to show any login form.
+
+I want to create a quick script to add a new song every day to my playlist. Is there a way I can do this without having to open the browser and log in every day? I could set my user and password in the script.
+The Spotify Web API does not support authorization through username and password. For this use case you would obtain an access token through the Authorization code. See the response above.
+
+Is there any way to override the HTTP verb such as sending a method=delete query parameter in a GET request?
+The Web API does not support method override at the moment. If you want to consume the API from IE9 and below, using XDomainRequest, which does not support custom headers, you will need to proxy those requests or make them server-side.
