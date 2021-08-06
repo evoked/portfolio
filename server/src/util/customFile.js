@@ -25,10 +25,14 @@ const writeToFile = async (option, data) => {
         }
     } else if (option === 'history') {
         try {
-            // todo
-            fs.appendFile('../history.json', `${data} \n`, err => {
+            let time = new Date().getDay()
+            fs.appendFile('../history.json', `${time} ${data} \n`, err => {
                 if(err) return error
             })
+            /* TODO:
+            Create custom logging system that includes days, hour accessed, can be useful
+            for showing traffic of all projects once hosting
+            */
             console.log(data + 'has been written')
             return
         } catch (e) {
@@ -65,11 +69,7 @@ const githubData = async () => {
             updatedAt: element.updated_at
         }
 
-        if(project.name === "portfolio") {
-            return;
-        }
-
-        if(!project.images) {
+        if(!project.images || project.name === 'portfolio') {
             data.push(project); 
             return;
         }

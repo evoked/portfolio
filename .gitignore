@@ -107,3 +107,6 @@ dist
 
 # Launch codes :shhh:
 .env
+data.json
+history.json
+blah.rest

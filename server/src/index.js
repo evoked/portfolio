@@ -28,7 +28,7 @@ const server = app.listen(PORT, () => {
 server.on('error', async err => {
     if(err.EADDRINUSE) {
         console.log('port already in use')
-        server.close(() => console.log(`server closed`))
+        server.close(err => console.log(`server closed: ${err}`))
     }
 })
 
@@ -56,6 +56,16 @@ app.get('/api/details', async (req,res) => {
     res.json(response)
 })
 
+cron.schedule('*/1 * * * *', async () => {
+    try{
+        let data = await cf.githubData()
+        cf.writeData('github', data)
+        console.log(`new data grabbed`)
+    } catch (e) {
+        console.log(e)
+    }
+})
+
 app.get('/api/spotify', async (req,res) => {
     let token = await axios.post('https://accounts.spotify.com/api/token', {
             headers: {"Authorization": `Basic ${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`},
@@ -69,15 +79,6 @@ app.get('/api/spotify', async (req,res) => {
     })
 })
 
-cron.schedule('*/1 * * * *', async () => {
-    try{
-        let data = await githubData()
-        writeData('github', data)
-        console.log(`new data grabbed`)
-    } catch (e) {
-        console.log(e)
-    }
-})
 
 const refreshToken = async () => {
     console.log(process.env.CLIENT_ID)
