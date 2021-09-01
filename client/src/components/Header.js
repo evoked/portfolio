@@ -3,7 +3,7 @@ import "../styling/header.scss"
 
 export const Header = () => {
     return (
-        <div className="container">
+        <div className="header">
             <p className="text">blah</p>
         </div>
     )

@@ -1,10 +1,10 @@
+import userSystem from 'os'
 import express from 'express'
+import fs from 'fs'
 import cors from 'cors'
 import axios from 'axios'
 import cron from 'node-cron'
-import fs from 'fs'
 import dotenv from 'dotenv'
-import userSystem from 'os'
 import cf from './util/customFile.js'
 
 dotenv.config()
@@ -18,7 +18,11 @@ app.use(cors())
 let PORT = process.env.PORT || 4002
 
 const server = app.listen(PORT, () => {
-    let system = {info: userSystem.userInfo(), uptime: userSystem.uptime(), host: userSystem.hostname()}
+    let system = {
+        info: userSystem.userInfo(), 
+        uptime: userSystem.uptime(), 
+        host: userSystem.hostname()
+    }
     console.log(`Server successfully running on http://localhost:${PORT}`);
     console.log(`Server details: `)
     console.log(system)

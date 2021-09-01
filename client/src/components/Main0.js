@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import header from '../styling/header.scss'
+import main from '../styling/main.scss'
+
 
 export const Main0 = ({props}) => {
+    console.log(props.data)
     return (
         <div className="projects"> 
             {props.data ? 
