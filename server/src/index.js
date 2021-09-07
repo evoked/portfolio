@@ -5,6 +5,7 @@ import cors from 'cors'
 import axios from 'axios'
 import cron from 'node-cron'
 import dotenv from 'dotenv'
+import ''
 import cf from './util/customFile.js'
 
 dotenv.config()
@@ -13,7 +14,7 @@ const app = express()
 
 app.use(express.urlencoded({extended: true}))
 app.use(express.json())
-app.use(cors())
+app.use(cors()) 
 
 let PORT = process.env.PORT || 4002
 
