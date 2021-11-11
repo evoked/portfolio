@@ -40,7 +40,8 @@ app.get('/api/default', (req,res) => {
     const ip = req.headers['x-forwarded-for'] ||
         req.socket.remoteAddress ||
         null;
-    if(ip !== '::1') {
+    if(ip === '::1') {
+        console.log(ip)
         cf.writeToFile('history', ip)
     }
     req.send(ip)
@@ -66,10 +67,10 @@ const links = [
 
 cron.schedule('*/1 * * * *', async () => {
     try{
-        links.forEach(async(link) => {
+        console.log('')
+        links.forEach(async (link) => {
             let data = await cf.getData(link.link)
             cf.writeData(link.fileToWrite, data)
-            console.log('\n')
         })
     } catch (e) {
         console.log(e)
