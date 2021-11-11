@@ -8,23 +8,23 @@ const writeData = async (option, data) => {
     } else if (typeof option === 'string') {
         writeToFile(option, data)
     } else {
-        return new Error('file type incorrect, use `github` or `history`')
+        return new Error('file type incorrect, use `github`, `history`, ``')
     }
 }
 
 const writeToFile = async (option, data) => {
-    const error = new Error('unable to write new data')
     if (option === 'github') {
         try {
             fs.writeFile('../data.json', JSON.stringify(data), err => {
-                if(err) return error
+                if(err) return new Error('unable to write data')
             })
             return
         } catch (e) {
             throw e
         }
-    } else if (option === 'history') {
-        try {
+    } 
+    switch (option) {
+        case 'history':
             let time = new Date().getDay()
             fs.appendFile('../history.json', `${time} ${data} \n`, err => {
                 if(err) return error
@@ -35,18 +35,29 @@ const writeToFile = async (option, data) => {
             */
             console.log(data + 'has been written')
             return
-        } catch (e) {
-            throw e
-        }
+        case 'forks':
+            let time = new Date().getDay()
+            fs.appendFile('../forks.json', `${time} ${data} \n`, err => {
+                if(err) return error
+            })
+            /* TODO:
+            Create custom logging system that includes days, hour accessed, can be useful
+            for showing traffic of all projects once hosting
+            */
+            console.log(data + 'has been written')
+            return
     }
     return new Error('file type incorrect, use `github` or `history`')
 }
 
-const githubData = async () => {
-    let x = await axios.get('https://api.github.com/users/evoked/repos', {
+const getData = async (url) => {
+
+    
+    // users/evoked/repos
+    let x = await axios.get(`https://api.github.com/${url}`, {
         headers: {
-        'User-Agent': 'evoked',
-        "Accept":"application/vnd.github.mercy-preview+json"
+            'User-Agent': 'evoked',
+            "Accept":"application/vnd.github.mercy-preview+json"
     }}).catch(rej => {
         return new Error('unable to connect to github')
     })
@@ -55,33 +66,35 @@ const githubData = async () => {
 
     let data = []
 
-    x.data.forEach(element => {
-        let project = {
-            userDetails: {
-                username: element.owner.login, 
-                usernameUrl: element.owner.html_url,
-            },
-            name: element.name,
-            url: element.html_url,
-            description: element.description,
-            topics: element.topics,
-            images: element.homepage,
-            updatedAt: element.updated_at
-        }
+    switch(url) {
+        case 'users/evoked/repos':
+            x.data.forEach(element => {
+            let project = {
+                userDetails: {
+                    username: element.owner.login, 
+                    usernameUrl: element.owner.html_url,
+                },
+                name: element.name,
+                url: element.html_url,
+                description: element.description,
+                topics: element.topics,
+                images: element.homepage,
+                updatedAt: element.updated_at
+            }
 
-        if(!project.images || project.name === 'portfolio') {
-            data.push(project); 
-            return;
-        }
+            if(!project.images || project.name === 'portfolio') {
+                data.push(project); 
+                return;
+            }
 
-        const images = project.images.split(' ')
-        project = {
-            ...project, 
-            images: images
-        }
-        data.push(project)
-    });
-
+            const images = project.images.split(' ')
+            project = {
+                ...project, 
+                images: images
+            }
+            data.push(project)
+        });
+    }
     return data
 }
 
@@ -90,8 +103,8 @@ const doesFileExist = async (file) => {
 }
 
 const fileNames = {
-    github: '../data.json',
-    history: '../history.json'
+    GITHUB: '../data.json',
+    HISTORY: '../history.json'
 }
 
 export default {

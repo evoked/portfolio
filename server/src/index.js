@@ -5,7 +5,6 @@ import cors from 'cors'
 import axios from 'axios'
 import cron from 'node-cron'
 import dotenv from 'dotenv'
-import ''
 import cf from './util/customFile.js'
 
 dotenv.config()
@@ -63,7 +62,18 @@ app.get('/api/details', async (req,res) => {
 
 cron.schedule('*/1 * * * *', async () => {
     try{
-        let data = await cf.githubData()
+        let data = await cf.getData()
+        cf.writeData('github', data)
+        console.log(`new data grabbed`)
+    } catch (e) {
+        console.log(e)
+    }
+})
+
+// todo change to 10 minutes
+cron.schedule('*/1 * * * *', async () => {
+    try{
+        let data = await cf.getData('')
         cf.writeData('github', data)
         console.log(`new data grabbed`)
     } catch (e) {
