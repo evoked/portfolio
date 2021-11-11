@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { fork } from 'child_process'
+import e from 'express'
 import fs from 'fs'
 
 const writeData = async (option, data) => {
@@ -14,9 +14,10 @@ const writeData = async (option, data) => {
 }
 
 const writeToFile = async (option, data) => {
+    const filePath = `../${option}.json`
     if (option === 'personal') {
         try {
-            fs.writeFile('../data.json', JSON.stringify(data), err => {
+            fs.writeFile(filePath, JSON.stringify(data), err => {
                 if(err) return new Error('unable to write data')
             })
             return
@@ -24,26 +25,25 @@ const writeToFile = async (option, data) => {
             throw e
         }
     } 
-    const time = new Date().getDay()
+    const time = new Date().toLocaleTimeString()
     switch (option) {
         case 'history':
-            fs.appendFile('../history.json', `${time} ${data} \n`, err => {
+            fs.appendFile(filePath, `${time} ${data} \n`, err => {
                 if(err) return error
             })
             return
-            
-        case 'forks':
-            
-            const parsedData = {...data}
-            const {name, forks_count} = parsedData[Object.keys(parsedData)[0]]
-            console.log(parsedData)
-                fs.appendFile('../forks.json', `${time} | ${name}: ${forks_count} \n`, err => {
-                    if(err) return error
-                })
             /* TODO:
             Create custom logging system that includes days, hour accessed, can be useful
             for showing traffic of all projects once hosting
             */
+            
+        case 'forks':
+            const parsedData = {...data}
+            const {name, forks_count} = parsedData[Object.keys(parsedData)[0]]
+            console.log(parsedData)
+                fs.appendFile(filePath, `${time} | ${name}: ${forks_count} \n`, err => {
+                    if(err) return error
+                })
             return
     }
     return new Error(`file type incorrect, use 'personal', 'history', forks`)
@@ -65,7 +65,8 @@ const getData = async (url) => {
     let data = []
 
     if(url === 'users/evoked/repos') {
-            x.data.forEach(element => {
+        x.data.forEach(element => {
+            console.log(element)
             let project = {
                 userDetails: {
                     username: element.owner.login, 
