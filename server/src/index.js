@@ -36,50 +36,48 @@ server.on('error', async err => {
     }
 })
 
-app.get('/api/default', async (req,res) => {
+app.get('/api/default', (req,res) => {
     const ip = req.headers['x-forwarded-for'] ||
         req.socket.remoteAddress ||
         null;
-    if(ip === '::1') {
-        res.send(ip)
-        return
+    if(ip !== '::1') {
+        cf.writeToFile('history', ip)
     }
-    cf.writeToFile('history', ip)
-    res.send(ip)
+    req.send(ip)
 })
 
+
 app.get('/api/details', async (req,res) => {
-    let x = await cf.doesFileExist(cf.file.github)
+    let x = await cf.doesFileExist(cf.file.GITHUB)
     if(!x) {
         console.log('data file created')
         await cf.writeData('github')
     }
 
-    let buffer = fs.readFileSync(cf.file.github)
+    let buffer = fs.readFileSync(cf.file.GITHUB)
     let response = JSON.parse(buffer)
     res.json(response)
 })
 
-cron.schedule('*/1 * * * *', async () => {
-    try{
-        let data = await cf.getData()
-        cf.writeData('github', data)
-        console.log(`new data grabbed`)
-    } catch (e) {
-        console.log(e)
-    }
-})
+const links = [
+    { link: 'search/repositories?q=user%3Apavelpichrt+repo%3Atest-js-grad+test-js-grad', fileToWrite: 'forks' },
+    { link: 'users/evoked/repos', fileToWrite: 'personal'}
+]
 
-// todo change to 10 minutes
 cron.schedule('*/1 * * * *', async () => {
     try{
-        let data = await cf.getData('')
-        cf.writeData('github', data)
-        console.log(`new data grabbed`)
+        links.forEach(async(link) => {
+            let data = await cf.getData(link.link)
+            cf.writeData(link.fileToWrite, data)
+            console.log('\n')
+        })
     } catch (e) {
         console.log(e)
     }
 })
+// todo change to 10 minutes
+
+
 
 app.get('/api/spotify', async (req,res) => {
     let token = await axios.post('https://accounts.spotify.com/api/token', {

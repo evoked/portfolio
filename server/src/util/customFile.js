@@ -8,12 +8,12 @@ const writeData = async (option, data) => {
     } else if (typeof option === 'string') {
         writeToFile(option, data)
     } else {
-        return new Error('file type incorrect, use `github`, `history`, ``')
+        return new Error('file type incorrect, use `personal`, `history`, `forks`')
     }
 }
 
 const writeToFile = async (option, data) => {
-    if (option === 'github') {
+    if (option === 'personal') {
         try {
             fs.writeFile('../data.json', JSON.stringify(data), err => {
                 if(err) return new Error('unable to write data')
@@ -23,20 +23,15 @@ const writeToFile = async (option, data) => {
             throw e
         }
     } 
+    const time = new Date().getDay()
     switch (option) {
         case 'history':
-            let time = new Date().getDay()
             fs.appendFile('../history.json', `${time} ${data} \n`, err => {
                 if(err) return error
             })
-            /* TODO:
-            Create custom logging system that includes days, hour accessed, can be useful
-            for showing traffic of all projects once hosting
-            */
-            console.log(data + 'has been written')
             return
+            
         case 'forks':
-            let time = new Date().getDay()
             fs.appendFile('../forks.json', `${time} ${data} \n`, err => {
                 if(err) return error
             })
@@ -47,28 +42,27 @@ const writeToFile = async (option, data) => {
             console.log(data + 'has been written')
             return
     }
-    return new Error('file type incorrect, use `github` or `history`')
+    return new Error(`file type incorrect, use 'personal', 'history', forks`)
 }
 
 const getData = async (url) => {
-
-    
     // users/evoked/repos
+    console.log(url)
     let x = await axios.get(`https://api.github.com/${url}`, {
         headers: {
             'User-Agent': 'evoked',
             "Accept":"application/vnd.github.mercy-preview+json"
     }}).catch(rej => {
-        return new Error('unable to connect to github')
+        return new Error('unable to connect to EEEEEE')
     })
 
     if(!x.data) return new Error('unable to connect to github')
 
     let data = []
 
-    switch(url) {
-        case 'users/evoked/repos':
+    if(url === 'users/evoked/repos') {
             x.data.forEach(element => {
+            console.log(element.name)
             let project = {
                 userDetails: {
                     username: element.owner.login, 
@@ -93,9 +87,11 @@ const getData = async (url) => {
                 images: images
             }
             data.push(project)
+            return
         });
+        return data
     }
-    return data
+    return x
 }
 
 const doesFileExist = async (file) => {
@@ -104,10 +100,11 @@ const doesFileExist = async (file) => {
 
 const fileNames = {
     GITHUB: '../data.json',
-    HISTORY: '../history.json'
+    HISTORY: '../history.json',
+    FORKS: '../forks.json'
 }
 
 export default {
-    writeData, writeToFile, doesFileExist, githubData,
+    writeData, writeToFile, doesFileExist, getData,
     file: fileNames
 }
